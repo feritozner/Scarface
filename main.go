@@ -134,6 +134,8 @@ func PrintHelp() {
 	fmt.Println(Green + "  -tu" + Reset + "             Encode input to URL")
 	fmt.Println(Green + "  -fu" + Reset + "             Decode input from URL")
 	fmt.Println(Green + "  -h" + Reset + "              Show this help message")
+	fmt.Println(Green + "  -tasc" + Reset + "           Encode input to ASCII")
+	fmt.Println(Green + "  -fasc" + Reset + "           Decode input from ASCII")
 	fmt.Println(Green + "  -help" + Reset + "           Show this help message")
 	fmt.Println()
 	BannerEnd()
