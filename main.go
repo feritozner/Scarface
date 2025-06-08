@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"net/url"
+	"html"
 	"os"
 	"strings"
 )
@@ -31,6 +31,10 @@ func main() {
 	h := flag.Bool("h", false, "Show help message")
 	tascii := flag.Bool("tasc", false, "Convert to ASCII")
 	fascii := flag.Bool("fasc", false, "Convert from ASCII")
+	tbinary := flag.Bool("tbinary", false, "Encode input to binary")
+	fbinary := flag.Bool("fbinary", false, "Decode input from binary")
+	thtml := flag.Bool("thtml", false, "Encode input to HTML entities")
+	fhtml := flag.Bool("fhtml", false, "Decode input from HTML entities")
 	help := flag.Bool("help", false, "Show help message")
 
 	flag.Parse()
@@ -106,11 +110,38 @@ func main() {
 			os.Exit(1)
 		}
 		Result(*data, result)
+
+	case *tbinary:
+		status = "Text to Binary"
+		BannerStart()
+		Result(*data, EncodeBinary(*data))
+
+	case *fbinary:
+		status = "Binary to Text"
+		BannerStart()
+		result, err := DecodeBinary(*data)
+		if err != nil {
+			fmt.Println(Red + "Binary decode error: " + err.Error() + Reset)
+			BannerEnd()
+			os.Exit(1)
+		}
+		Result(*data, result)
+
+	case *thtml:
+		status = "Text to HTML Entity"
+		BannerStart()
+		Result(*data, EncodeHTMLEntity(*data))
+
+	case *fhtml:
+		status = "HTML Entity to Text"
+		BannerStart()
+		Result(*data, DecodeHTMLEntity(*data))
+
 	default:
 		status = "No valid operation selected"
 		BannerStart()
-		fmt.Println(Red + "Error: " + Reset + "No valid operation specified. Use one of the flags: " +
-			Green + "-tb64, -fb64, -th, -fh, -tu, -fu" + Reset)
+		fmt.Println(Red + "Error: " + Reset + "No valid operation specified. To see flags: " +
+			Green + "--help" + Reset)
 		BannerEnd()
 		os.Exit(1)
 	}
@@ -136,6 +167,10 @@ func PrintHelp() {
 	fmt.Println(Green + "  -h" + Reset + "              Show this help message")
 	fmt.Println(Green + "  -tasc" + Reset + "           Encode input to ASCII")
 	fmt.Println(Green + "  -fasc" + Reset + "           Decode input from ASCII")
+	fmt.Println(Green + "  -tbinary" + Reset + "          Encode input to binary")
+	fmt.Println(Green + "  -fbinary" + Reset + "          Decode input from binary")
+	fmt.Println(Green + "  -thtml" + Reset + "           Encode input to HTML entities")
+	fmt.Println(Green + "  -fhtml" + Reset + "           Decode input from HTML entities")
 	fmt.Println(Green + "  -help" + Reset + "           Show this help message")
 	fmt.Println()
 	BannerEnd()
@@ -195,18 +230,74 @@ func DecodeHex(input string) (string, error) {
 
 // URL encode/decode
 func EncodeURL(input string) string {
-	return url.QueryEscape(input)
+	var result string
+	for _, c := range input {
+		result += fmt.Sprintf("%%%02X", c)
+	}
+	return result
 }
 
 func DecodeURL(input string) (string, error) {
-	result, err := url.QueryUnescape(input)
-	return result, err
+	var result string
+	input = strings.ReplaceAll(input, "%", " %")
+	fields := strings.Fields(input)
+	for _, f := range fields {
+		if len(f) == 3 && f[0] == '%' {
+			var b byte
+			_, err := fmt.Sscanf(f, "%%%02X", &b)
+			if err != nil {
+				return "", fmt.Errorf("invalid URL encoding: %s", f)
+			}
+			result += string(b)
+		} else {
+			result += f
+		}
+	}
+	return result, nil
+}
+
+// Binary encode/decode
+func EncodeBinary(input string) string {
+	var result string
+	for i, c := range input {
+		if i > 0 {
+			result += " "
+		}
+		result += fmt.Sprintf("%08b", c)
+	}
+	return result
+}
+
+func DecodeBinary(input string) (string, error) {
+	var result string
+	for _, s := range strings.Fields(input) {
+		var b byte
+		_, err := fmt.Sscanf(s, "%08b", &b)
+		if err != nil {
+			return "", fmt.Errorf("invalid binary code: %s", s)
+		}
+		result += string(b)
+	}
+	return result, nil
+}
+
+// HTML Entity encode/decode
+func EncodeHTMLEntity(input string) string {
+	var result string
+	for _, c := range input {
+		result += fmt.Sprintf("&#%d;", c)
+	}
+	return result
+}
+
+func DecodeHTMLEntity(input string) string {
+	return html.UnescapeString(input)
 }
 
 func BannerStart() {
 
 	fmt.Println(Red + "------------------------------------------------------------  " + Reset)
-	fmt.Println(Red + "Scarface # " + Green + "Version 1.2 # " + Cyan + status + " #")
+	fmt.Println(Red + "Scarface # " + Green + "Version 1.3 # " + Cyan + status + " #")
 	fmt.Println(Red + "------------------------------------------------------------  " + Reset)
 
 }
