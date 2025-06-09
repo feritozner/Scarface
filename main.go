@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"html"
@@ -42,6 +43,7 @@ func main() {
 	tcaesar := flag.Int("tcaesar", 0, "Encode input with Caesar cipher (provide shift)")
 	fcaesar := flag.Int("fcaesar", 0, "Decode input with Caesar cipher (provide shift)")
 	tmd5 := flag.Bool("tmd5", false, "Encode input to MD5 hash")
+	tjwt := flag.Bool("tjwt", false, "Decode JWT token")
 
 	flag.Parse()
 
@@ -163,6 +165,17 @@ func main() {
 		BannerStart()
 		Result(*data, EncodeMD5(*data))
 
+	case *tjwt:
+		status = "JWT Decode"
+		BannerStart()
+		result, err := DecodeJWT(*data)
+		if err != nil {
+			fmt.Println(Red + "JWT decode error: " + err.Error() + Reset)
+			BannerEnd()
+			os.Exit(1)
+		}
+		Result(*data, result)
+
 	default:
 		status = "No valid operation selected"
 		BannerStart()
@@ -236,6 +249,8 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 		result = DecodeCaesar(data, shift)
 	case "MD5 Encode":
 		result = EncodeMD5(data)
+	case "JWT Decode":
+		result, err = DecodeJWT(data)
 	}
 	if err != nil {
 		result = "Error: " + err.Error()
@@ -339,6 +354,7 @@ const pageHTML = `
                 <option>Caesar Encode</option>
                 <option>Caesar Decode</option>
                 <option>MD5 Encode</option>
+                <option>JWT Decode</option>
             </select>
 
             <div id="shift-group" style="display:none;">
@@ -512,6 +528,39 @@ func EncodeMD5(input string) string {
 	return hex.EncodeToString(hash[:])
 }
 
+// JWT decode
+func DecodeJWT(token string) (string, error) {
+	parts := strings.Split(token, ".")
+	if len(parts) < 2 {
+		return "", fmt.Errorf("invalid JWT: not enough parts")
+	}
+	decode := func(s string) (string, error) {
+		// Base64url padding düzelt
+		if m := len(s) % 4; m != 0 {
+			s += strings.Repeat("=", 4-m)
+		}
+		data, err := base64.URLEncoding.DecodeString(s)
+		if err != nil {
+			return "", err
+		}
+		var out map[string]interface{}
+		if err := json.Unmarshal(data, &out); err != nil {
+			return "", err
+		}
+		pretty, _ := json.MarshalIndent(out, "", "  ")
+		return string(pretty), nil
+	}
+	header, err := decode(parts[0])
+	if err != nil {
+		return "", fmt.Errorf("header decode error: %v", err)
+	}
+	payload, err := decode(parts[1])
+	if err != nil {
+		return "", fmt.Errorf("payload decode error: %v", err)
+	}
+	return "Header:\n" + header + "\n\nPayload:\n" + payload, nil
+}
+
 func BannerStart() {
 
 	fmt.Println(Red + "------------------------------------------------------------  " + Reset)
@@ -551,6 +600,7 @@ func PrintHelp() {
 	fmt.Println(Green + "  -tcaesar [n]" + Reset + "    Encode input with Caesar cipher (shift n)")
 	fmt.Println(Green + "  -fcaesar [n]" + Reset + "    Decode input with Caesar cipher (shift n)")
 	fmt.Println(Green + "  -tmd5" + Reset + "           Encode input to MD5 hash")
+	fmt.Println(Green + "  -tjwt" + Reset + "           Decode JWT token")
 	fmt.Println()
 	BannerEnd()
 }
