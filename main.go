@@ -596,6 +596,7 @@ func PrintHelp() {
 	fmt.Println(Green + "  -fcaesar [n]" + Reset + "    Decode input with Caesar cipher (shift n)")
 	fmt.Println(Green + "  -tmd5" + Reset + "           Encode input to MD5 hash")
 	fmt.Println(Green + "  -tjwt" + Reset + "           Decode JWT token")
+	fmt.Println(Green + "  -srv" + Reset + "            Start web server on port 9001")
 	fmt.Println()
 	BannerEnd()
 }
