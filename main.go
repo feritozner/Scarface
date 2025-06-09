@@ -178,11 +178,14 @@ func main() {
 // --- WEB SERVER ---
 
 func runWebServer() {
+	status = "Web Server"
+	BannerStart()
 	http.HandleFunc("/", servePage)
 	http.HandleFunc("/convert", handleConvert)
-	fmt.Println(Green + "Scarface Web UI started at: " + Cyan + "http://127.0.0.1:8080" + Reset)
-	fmt.Println(Green + "Only accessible from this computer." + Reset)
-	http.ListenAndServe("127.0.0.1:8080", nil)
+	fmt.Println(Green + "Scarface Web UI started at: " + Cyan + "http://127.0.0.1:9001" + Reset)
+	fmt.Println(Green + "CTRL+C to stop the server" + Reset)
+	BannerEnd()
+	http.ListenAndServe("127.0.0.1:9001", nil)
 }
 
 func servePage(w http.ResponseWriter, r *http.Request) {
@@ -201,8 +204,6 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 	shift, _ := strconv.Atoi(shiftStr)
 	var result string
 	var err error
-
-	fmt.Println("data:", data, "algo:", algo, "shift:", shift)
 
 	switch algo {
 	case "Base64 Encode":
@@ -340,8 +341,10 @@ const pageHTML = `
                 <option>MD5 Encode</option>
             </select>
 
-            <label for="shift">Caesar Shift</label>
-            <input type="number" id="shift" name="shift" value="3" min="1" max="25">
+            <div id="shift-group" style="display:none;">
+                <label for="shift">Caesar Shift</label>
+                <input type="number" id="shift" name="shift" value="3" min="1" max="25">
+            </div>
 
             <button type="submit">Convert</button>
         </form>
@@ -349,17 +352,17 @@ const pageHTML = `
     </div>
     <script>
         const algo = document.getElementById('algo');
-        const shiftInput = document.getElementById('shift');
-        function updateShiftInput() {
-            if (algo.value.includes('Caesar')) {
-                shiftInput.disabled = false;
-            } else {
-                shiftInput.disabled = true;
-            }
-        }
-        algo.addEventListener('change', updateShiftInput);
-        // Sayfa ilk açıldığında da kontrol et
-        updateShiftInput();
+const shiftGroup = document.getElementById('shift-group');
+function updateShiftGroup() {
+    if (algo.value.includes('Caesar')) {
+        shiftGroup.style.display = '';
+    } else {
+        shiftGroup.style.display = 'none';
+    }
+}
+algo.addEventListener('change', updateShiftGroup);
+// Sayfa ilk açıldığında da kontrol et
+updateShiftGroup();
         document.getElementById('convertForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const form = e.target;
