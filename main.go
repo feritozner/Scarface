@@ -207,7 +207,6 @@ func servePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleConvert(w http.ResponseWriter, r *http.Request) {
-	// Hem klasik hem multipart formu işle
 	r.ParseForm()
 	r.ParseMultipartForm(10 << 20) // 10 MB limit
 
@@ -258,7 +257,7 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, result)
 }
 
-// --- Modern HTML/CSS ---
+// --- Web Interface ---
 const pageHTML = `
 <!DOCTYPE html>
 <html lang="en">
@@ -377,7 +376,6 @@ function updateShiftGroup() {
     }
 }
 algo.addEventListener('change', updateShiftGroup);
-// Sayfa ilk açıldığında da kontrol et
 updateShiftGroup();
         document.getElementById('convertForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -535,7 +533,6 @@ func DecodeJWT(token string) (string, error) {
 		return "", fmt.Errorf("invalid JWT: not enough parts")
 	}
 	decode := func(s string) (string, error) {
-		// Base64url padding düzelt
 		if m := len(s) % 4; m != 0 {
 			s += strings.Repeat("=", 4-m)
 		}
@@ -564,7 +561,7 @@ func DecodeJWT(token string) (string, error) {
 func BannerStart() {
 
 	fmt.Println(Red + "------------------------------------------------------------  " + Reset)
-	fmt.Println(Red + "Scarface # " + Green + "Version 2.0 # " + Cyan + status + " #")
+	fmt.Println(Red + "Scarface # " + Green + "Version 2.1 # " + Cyan + status + " #")
 	fmt.Println(Red + "------------------------------------------------------------  " + Reset)
 
 }
