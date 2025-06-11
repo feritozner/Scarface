@@ -488,11 +488,11 @@ func DecodeBinary(input string) (string, error) {
 	return result, nil
 }
 
-// HTML Entity encode/decode
+// HTML Entity encode/decode (hexadecimal)
 func EncodeHTMLEntity(input string) string {
 	var result string
 	for _, c := range input {
-		result += fmt.Sprintf("&#%d;", c)
+		result += fmt.Sprintf("&#x%X;", c)
 	}
 	return result
 }
