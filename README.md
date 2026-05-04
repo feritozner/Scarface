@@ -18,7 +18,7 @@ go build -o scarface.exe main.go
 - Binary encode/decode
 - HTML encode/decode
 - Caesar encode/decode
-- MD5 encode
+- MD5 hashing
 - JWT decode
 - Web Interface
 - Command Line Interface
